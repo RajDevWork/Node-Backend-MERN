@@ -6,6 +6,9 @@ const notes = []
 
 
 app.use(express.json())
+app.get("/",(req,res)=>{
+    res.send("Node JS backend!")
+})
 
 app.post("/notes",(req,res)=>{
     let note = {"id":Math.floor(Math.random()*100),...req.body}
