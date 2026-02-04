@@ -1,7 +1,0 @@
-DChzr96TXt1qKpxG
-
-rajparihar14397_db_user
-
-mongodb+srv://rajparihar14397_db_user:DChzr96TXt1qKpxG@cluster0.x8is1sn.mongodb.net/
-
-git remote set-url origin git@github.com:RajDevWork/node-backend-hustle.git
