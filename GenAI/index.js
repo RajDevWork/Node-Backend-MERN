@@ -1,15 +1,30 @@
-import readline from 'readline/promises';
+import readline from "readline/promises";
 import { ChatGoogle } from "@langchain/google";
-import dotenv from 'dotenv';
-import {HumanMessage} from "langchain";
+import { HumanMessage, tool, createAgent } from "langchain";
+import dotenv from "dotenv";
 dotenv.config();
+
+import { tavilySearch } from "./tavilySearch.service.js";
+
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
-const model = new ChatGoogle("gemini-2.5-flash");
-const messages = []
+const model = new ChatGoogle("gemini-3-flash-preview");
+
+const searchTool = tool(tavilySearch, {
+  name: "tavily_search",
+  description: "Search the web for information",
+});
+
+const agent = createAgent({
+  model,
+  tools: [searchTool],
+});
+
+const messages = [];
+
 const colors = {
   reset: "\x1b[0m",
   green: "\x1b[32m",
@@ -17,28 +32,37 @@ const colors = {
   blue: "\x1b[34m",
   yellow: "\x1b[33m",
   red: "\x1b[31m",
+  white: "\x1b[37m",
 };
 
-const userPrompt = `${colors.green}You:${colors.reset} `;
+const line = `${colors.blue}══════════════════════════════════════════════════${colors.reset}`;
 
-console.log(`Type '${colors.yellow}exit${colors.reset}' or press Ctrl+C to quit.\n`);
+console.log(`${colors.yellow}🤖 AI CLI Assistant Started${colors.reset}`);
+console.log(`Type '${colors.yellow}exit${colors.reset}' to quit\n`);
 
 while (true) {
-  const prompt = await rl.question(userPrompt);
-  messages.push(new HumanMessage(prompt));
+  const prompt = await rl.question(`${colors.green}You:${colors.reset} `);
 
-  if (!prompt || prompt.trim().toLowerCase() === 'exit') {
-    console.log(`${colors.cyan}Goodbye!${colors.reset}`);
+  if (!prompt || prompt.trim().toLowerCase() === "exit") {
+    console.log(`${colors.cyan}Goodbye! 👋${colors.reset}`);
     break;
   }
 
+  messages.push(new HumanMessage(prompt));
+
   try {
-    const ai = await model.invoke(messages);
-    console.log(`\n${colors.blue}════════════════════════════════════════════════${colors.reset}`);
-    console.log(`${colors.cyan}AI:${colors.reset}`);
-    console.log(`${colors.white ?? ''}${ai.content}${colors.reset}`);
-    console.log(`${colors.blue}════════════════════════════════════════════════${colors.reset}\n`);
-    messages.push(ai);
+    const response = await agent.invoke({
+      messages,
+    });
+
+    const aiMessage = response.messages[response.messages.length - 1];
+
+    messages.push(aiMessage);
+
+    console.log(`\n${line}`);
+    console.log(`${colors.cyan}🤖 AI:${colors.reset}\n`);
+    console.log(`${colors.white}${aiMessage.content}${colors.reset}`);
+    console.log(`${line}\n`);
   } catch (err) {
     console.error(`${colors.red}Error talking to the model:${colors.reset}`, err);
   }
