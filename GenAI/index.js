@@ -2,6 +2,7 @@ import readline from "readline/promises";
 import { ChatGoogle } from "@langchain/google";
 import { HumanMessage, tool, createAgent } from "langchain";
 import dotenv from "dotenv";
+import {sendEmail} from "./mail.service.js";
 dotenv.config();
 
 import { tavilySearch } from "./tavilySearch.service.js";
@@ -11,16 +12,20 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-const model = new ChatGoogle("gemini-3-flash-preview");
+const model = new ChatGoogle("gemini-2.5-flash");
 
 const searchTool = tool(tavilySearch, {
   name: "tavily_search",
   description: "Search the web for information",
 });
+const emailTool = tool(sendEmail, {
+  name: "send_email",
+  description: "Send an email using the Gmail API. Provide 'to', 'subject', 'html', and 'text' parameters.",
+});
 
 const agent = createAgent({
   model,
-  tools: [searchTool],
+  tools: [searchTool, emailTool],
 });
 
 const messages = [];
